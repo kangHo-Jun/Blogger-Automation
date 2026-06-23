@@ -6949,11 +6949,14 @@ function createV7HTMLPrompt(preprocessData, seoKeywords, highlightKeywords, temp
     '6. 사진박스: <tr><td><table style="width:100%;background-color:#f0f0f0;border-collapse:collapse;"><tr><td style="padding:25px;text-align:center;color:#888;">📷 사진 N: 설명</td></tr></table></td></tr>\n' +
     '7. TIP박스: <tr><td style="padding:20px 0;"><table style="width:100%;background-color:#f0f0f0;border-collapse:collapse;"><tr><td style="padding:18px 20px;">💡 <b>TIP</b><br>내용</td></tr></table></td></tr>\n' +
     '8. 비교테이블: 별도 <table> 중첩 (헤더:#222배경 흰글씨, 짝수행:#f9f9f9배경)\n' +
-    '9. 마무리: <tr><td style="padding:30px 0;text-align:center;"><b>마무리 질문</b><br>핵심메시지<br>CTA</td></tr>\n\n' +
+    '9. FAQ: <details><summary>질문</summary><p>답변</p></details> 형식으로 2~3개\n' +
+    '10. 마무리: <tr><td style="padding:30px 0;text-align:center;"><b>마무리 질문</b><br>핵심메시지<br>CTA</td></tr>\n\n' +
     '</table>\n\n' +
     '[작성 원칙]\n' +
     '- 섹션별 사진 2개씩 배열\n' +
     '- SEO 키워드 자연스럽게 배치\n' +
+    '- FAQ는 실제 검색 질문 형태로 작성 ("~하면 어떻게 되나요?", "~차이가 뭔가요?")\n' +
+    '- FAQ 답변은 2~3문장, 핵심만 간결하게\n' +
     '- HTML 코드만 출력, 설명 절대 금지';
 
   var geminiStr = '없음';
