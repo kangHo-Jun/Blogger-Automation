@@ -2646,9 +2646,11 @@ function processNextSEOFile() {
     }
     
     toast_('완전 재구성 처리 완료: ' + baseName + ' (남은: ' + remaining + '개)');
+    return savedFinalFile;
     
   } catch (error) {
     Logger.log('❌ SEO 처리 오류: ' + error.message);
+    return null;
   }
 }
 
@@ -2685,14 +2687,17 @@ function runFullPipelineOneByOne() {
     
     // C단계: SEO 최적화 글 생성 (단일 처리)
     Logger.log("3️⃣ C단계: SEO 최적화 글 생성 (단일 처리)");
-    processNextSEOFile();
+    var seoFile = processNextSEOFile();
     
     Logger.log("🎯 파이프라인 1차 완료!");
     Logger.log("💡 남은 파일이 있으면 5분 후에 processNextSEOFile()을 반복 실행하세요.");
     Logger.log("💡 모든 SEO 처리 완료 후 STEP_D1_Simple_SEO_Docs()를 실행하세요.");
     
+    return seoFile;
+    
   } catch (error) {
     Logger.log("❌ 파이프라인 오류: " + error.message);
+    return null;
   }
 }
 
@@ -4020,9 +4025,7 @@ function runGenerateOnly() {
       };
     }
 
-    runFullPipelineOneByOne();
-
-    var generatedFile = getLatestGeneratedSeoFile_();
+    var generatedFile = runFullPipelineOneByOne();
     if (!generatedFile) {
       Logger.log('⚠️ runGenerateOnly 완료 후 생성된 _final_seo.json 파일을 찾지 못했습니다.');
       Logger.log('📁 확인 대상 폴더 ID: ' + CONFIG.JSON_OUTPUT_FOLDER_ID);
