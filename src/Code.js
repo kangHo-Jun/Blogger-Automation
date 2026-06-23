@@ -6931,6 +6931,11 @@ function createV7HTMLPrompt(preprocessData, seoKeywords, highlightKeywords, temp
     '- 수치, 통계, 사례는 반드시 제공된 데이터 기반만 사용\n' +
     '- 근거 없는 수치 임의 생성 절대 금지\n' +
     '- 데이터 없으면 수치 생략\n\n' +
+    '[브랜드 노출 원칙]\n' +
+    '- 대산은 건축자재 유통회사임. 제조사가 아님\n' +
+    '- 브랜드 노출 시 "대산을 통해 공급되는", "대산에서 취급하는", "대산 공식 유통" 표현 사용\n' +
+    '- 글 1편당 자연스러운 맥락에서 1~2회만 노출 (광고성 반복 금지)\n' +
+    '- 제품명 언급 시 공급처로서 대산을 연결: "LX PF보드 (대산 공급)" 형식 가능\n\n' +
     styleInstructions + '\n' +
     templateInstructions + '\n' +
     '[출력 형식 - 고정 표준 템플릿]\n' +
