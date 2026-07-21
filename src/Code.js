@@ -662,8 +662,8 @@ function getNewFilesToProcess() {
     var f = files.next();
     var name = f.getName();
 
-    // HTML 또는 TXT 파일, PDF 파일 처리
-    if (!/\.(html?|mhtml|mht|txt|pdf)$/i.test(name)) continue;
+    // HTML, TXT, MD 또는 PDF 파일 처리
+    if (!/\.(html?|mhtml|mht|txt|md|pdf)$/i.test(name)) continue;
 
     var baseName = name.replace(/\.[^.]+$/, '');
 
@@ -857,7 +857,7 @@ function preprocessFilesToJson() {
         continue;
       }
     } else {
-      // 일반 파일 처리 (HTML, TXT)
+      // 일반 파일 처리 (HTML, TXT, MD)
       content = f.getBlob().getDataAsString('UTF-8');
       if (!content) {
         Logger.log('⚠️ 파일 내용이 비어있음: ' + name);
@@ -867,6 +867,10 @@ function preprocessFilesToJson() {
       if (/\.txt$/i.test(name)) {
         // TXT 파일 처리
         Logger.log('📝 TXT 파일로 인식: ' + name);
+        analyzed = analyzeTxtScript(content);
+      } else if (/\.md$/i.test(name)) {
+        // Markdown은 별도 파싱 없이 일반 텍스트로 처리
+        Logger.log('📝 MD 파일로 인식: ' + name);
         analyzed = analyzeTxtScript(content);
       } else {
         // HTML 파일 처리
@@ -4149,7 +4153,7 @@ function runGenerateOnly() {
     updatePublishStatus_(sheet, statusRowIndex, '글생성중');
     if (!hasPendingInputOrPreprocess_()) {
       updatePublishStatus_(sheet, statusRowIndex, '대기중');
-      toast_('입력 폴더에 처리할 파일이 없습니다. 새 HTML, TXT, PDF 파일을 먼저 업로드하세요.');
+      toast_('입력 폴더에 처리할 파일이 없습니다. 새 HTML, TXT, MD, PDF 파일을 먼저 업로드하세요.');
       return {
         success: false,
         status: 'no_input'
@@ -4695,7 +4699,7 @@ function runAll_Auto() {
 
     if (!hasPendingInputOrPreprocess_()) {
       SpreadsheetApp.getActiveSpreadsheet().toast(
-        '⚠️ 입력 폴더에 처리할 파일이 없습니다. 새 HTML, TXT, PDF 파일을 먼저 업로드하세요.', '대산 블로그', 5);
+        '⚠️ 입력 폴더에 처리할 파일이 없습니다. 새 HTML, TXT, MD, PDF 파일을 먼저 업로드하세요.', '대산 블로그', 5);
       return { success: false, status: 'no_input' };
     }
 
@@ -6134,7 +6138,7 @@ function clearProcessedRecordByBaseName(baseName) {
       var file = files.next();
       var fileName = file.getName();
 
-      if (!/\.(html?|mhtml|mht|txt|pdf)(의 사본)?$/i.test(fileName)) continue;
+      if (!/\.(html?|mhtml|mht|txt|md|pdf)(의 사본)?$/i.test(fileName)) continue;
 
       var currentBaseName = fileName
         .replace(/의 사본$/i, '')
