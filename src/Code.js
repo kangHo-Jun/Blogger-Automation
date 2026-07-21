@@ -47,6 +47,8 @@ const CONFIG = {
 
 // 🏠 Blogger 설정
 const BLOG_ID = '3911627335922911456';
+const TRUST_BADGE_URL = 'https://raw.githubusercontent.com/kangHo-Jun/Blogger-Automation/main/assets/badges/trust-badge-gs-3yr.png';
+const TRUST_BADGE_ALT = '대산 건축자재 GS건설 3년 연속 납품업체';
 
 var CATEGORY_MAP = {
   '석고보드': ['석고', 'gypsum', 'drywall', '천연석고', '방수석고'],
@@ -4415,7 +4417,7 @@ function runPublishOnly(seoFileId) {
     }
     Logger.log("4️⃣ Blogger HTML 변환");
     var htmlStepStart = new Date().getTime();
-    htmlContent = convertToBloggerHTML(mappedContent, title, labels, relatedPosts);
+    htmlContent = convertToBloggerHTML(mappedContent, title, labels, relatedPosts, finalData.content_type || {});
     Logger.log('⏱️ runPublishOnly 4단계 HTML 변환 소요시간: ' + ((new Date().getTime() - htmlStepStart) / 1000).toFixed(1) + '초');
 
     Logger.log("5️⃣ Blogger 발행");
@@ -8756,7 +8758,51 @@ function convertMarkdownTableToHtml_(text) {
   return htmlParts.join('');
 }
 
-function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts) {
+function buildTrustBadgeHtml_(placement) {
+  return '<img data-trust-badge="' + String(placement || 'intro') + '" src="' + TRUST_BADGE_URL +
+    '" alt="' + TRUST_BADGE_ALT +
+    '" style="width:100%; max-width:680px; height:auto; display:block; margin:1.5rem auto;">\n';
+}
+
+function shouldInsertTrustBadgeBeforeCta_(contentType) {
+  var primaryType = String(((contentType || {}).primary) || contentType || '').trim();
+  return {
+    '대산브랜딩': true,
+    '구매가이드': true,
+    '비용물류판단': true
+  }[primaryType] === true;
+}
+
+/**
+ * 모든 포스트의 도입부 직후에 신뢰 뱃지를 삽입합니다.
+ * 선택 콘텐츠 타입은 하단 견적 CTA 직전에 동일 뱃지를 한 번 더 삽입합니다.
+ */
+function insertTrustBadge_(htmlContent, contentType) {
+  var html = String(htmlContent || '');
+  if (!html) return html;
+
+  if (html.indexOf('data-trust-badge="intro"') === -1) {
+    var firstH2Match = html.match(/<h2\b/i);
+    var introInsertIndex = firstH2Match ? firstH2Match.index : -1;
+    if (introInsertIndex === -1) {
+      var h1EndIndex = html.search(/<\/h1>/i);
+      introInsertIndex = h1EndIndex === -1 ? 0 : html.indexOf('>', h1EndIndex) + 1;
+    }
+    html = html.substring(0, introInsertIndex) + '\n' + buildTrustBadgeHtml_('intro') + html.substring(introInsertIndex);
+  }
+
+  if (shouldInsertTrustBadgeBeforeCta_(contentType) && html.indexOf('data-trust-badge="cta"') === -1) {
+    var ctaMarker = '<div data-daesan-cta="estimate"';
+    var ctaInsertIndex = html.lastIndexOf(ctaMarker);
+    if (ctaInsertIndex !== -1) {
+      html = html.substring(0, ctaInsertIndex) + buildTrustBadgeHtml_('cta') + html.substring(ctaInsertIndex);
+    }
+  }
+
+  return html;
+}
+
+function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts, contentType) {
   if (!docContent) return "";
 
   // HTML 특수문자 이스케이프 함수
@@ -8794,7 +8840,7 @@ function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts) {
 
   var buildCtaHtml = function (materialName) {
     var safeMaterialName = escapeHtml(materialName || '건축자재');
-    return "<div style=\"background:#1a3a5c; color:white; padding:2em; margin:2em 0; border-radius:8px; text-align:center;\">\n" +
+    return "<div data-daesan-cta=\"estimate\" style=\"background:#1a3a5c; color:white; padding:2em; margin:2em 0; border-radius:8px; text-align:center;\">\n" +
       "  <p style=\"font-size:1.2em; font-weight:500; margin:0 0 0.5em; color:white;\">지금 바로 견적 받아보세요</p>\n" +
       "  <p style=\"font-size:0.9em; margin:0 0 1.2em; color:rgba(255,255,255,0.85); line-height:1.7;\">" + safeMaterialName + " 비용이 궁금하신가요?<br>대산 실시간 견적 시스템으로 30초 안에 확인하세요</p>\n" +
       "  <a href=\"https://daesan.ai\" style=\"display:inline-block; background:white; color:#1a3a5c; padding:0.7em 2em; border-radius:8px; font-weight:500; font-size:0.9em; text-decoration:none;\">견적 받기 →</a>\n" +
@@ -9021,7 +9067,7 @@ function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts) {
   Logger.log("✅ Blogger HTML 변환 완료 (보안 이스케이프 적용)");
   Logger.log("📊 태그 통계: " + JSON.stringify(tagCount));
 
-  return html;
+  return insertTrustBadge_(html, contentType);
 }
 
 /**
