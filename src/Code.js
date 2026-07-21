@@ -1479,7 +1479,14 @@ function createReconstructedPromptWithTemplate(preprocessData, weights, seoKeywo
 
   // 템플릿 데이터 적용
   var templateInfo = templateData || {};
-  var gundalStyleRules = loadWritingStyleGundal_();
+  var gundalStyleRules =
+    '1. 도입부 후킹: 글 시작 5줄 이내에 실제 고객 질문 1~2개를 큰따옴표로 인용한다. 정의나 사전식 설명으로 시작하지 마라.\n' +
+    '- 도입 순서는 반드시 `인사말 → 고객 질문 인용 → [[TRUST_BADGE]] → 조직형 신뢰 블록 → 본문`으로 구성한다. `[[TRUST_BADGE]]`는 단독 줄에 정확히 한 번만 출력한다.\n' +
+    '2. 조직형 신뢰 블록: 뱃지 바로 다음에 대산의 유통 경력·취급 품목 범위·안양 지역 납품 실적을 1~2문장으로 배치한다. 반드시 "대산은/저희는/대산에서" 같은 조직 주어를 사용한다.\n' +
+    '- 대산은 건축자재 유통사이며 제조사나 개인 전문가로 서술하지 마라. "저는 OO년차 대표", "제가 현장에서", "대표인 저는" 등 개인 대표 화법을 금지한다. 제공 자료에 없는 수치를 만들지 마라.\n' +
+    '3. 자문자답 리듬: 본문 소제목 진입 전에 `그렇다면 ~일까요?` 형태의 자문을 1회 이상 넣고 다음 문장에서 즉시 답한다.\n' +
+    '4. 기능 기호 사용: 규격·두께·등급 나열은 `▶`, `→` 기호로 목록화하고 일반 문단형 설명과 혼용한다.\n' +
+    '5. 문단 길이 강제: 일반 본문 한 문단은 최대 2문장으로 제한하고 문단 사이에 빈 줄을 반드시 둔다. 1문장/2문장 문단과 단문/장문을 섞어 문장 길이 균일화를 피한다.';
 
   // 스타일 데이터를 바탕으로 스타일 설명 생성
   var styleDescription = generateStyleDescription(styleData);
@@ -6895,7 +6902,14 @@ function createV7HTMLPrompt(preprocessData, seoKeywords, highlightKeywords, temp
   var fulltext = preprocessData.fulltext || "";
   var contentOutline = preprocessData.content_outline || [];
   var materialCautions = loadMaterialCautions_();
-  var gundalStyleRules = loadWritingStyleGundal_();
+  var gundalStyleRules =
+    '1. 도입부 후킹: 글 시작 5줄 이내에 실제 고객 질문 1~2개를 큰따옴표로 인용한다. 정의나 사전식 설명으로 시작하지 마라.\n' +
+    '- 도입 순서는 반드시 `인사말 → 고객 질문 인용 → [[TRUST_BADGE]] → 조직형 신뢰 블록 → 본문`으로 구성한다. `[[TRUST_BADGE]]`는 단독 줄에 정확히 한 번만 출력한다.\n' +
+    '2. 조직형 신뢰 블록: 뱃지 바로 다음에 대산의 유통 경력·취급 품목 범위·안양 지역 납품 실적을 1~2문장으로 배치한다. 반드시 "대산은/저희는/대산에서" 같은 조직 주어를 사용한다.\n' +
+    '- 대산은 건축자재 유통사이며 제조사나 개인 전문가로 서술하지 마라. "저는 OO년차 대표", "제가 현장에서", "대표인 저는" 등 개인 대표 화법을 금지한다. 제공 자료에 없는 수치를 만들지 마라.\n' +
+    '3. 자문자답 리듬: 본문 소제목 진입 전에 `그렇다면 ~일까요?` 형태의 자문을 1회 이상 넣고 다음 문장에서 즉시 답한다.\n' +
+    '4. 기능 기호 사용: 규격·두께·등급 나열은 `▶`, `→` 기호로 목록화하고 일반 문단형 설명과 혼용한다.\n' +
+    '5. 문단 길이 강제: 일반 본문 한 문단은 최대 2문장으로 제한하고 문단 사이에 빈 줄을 반드시 둔다. 1문장/2문장 문단과 단문/장문을 섞어 문장 길이 균일화를 피한다.';
 
   // 1. 시트2 스타일 지침 생성
   var styleInstructions = '';
@@ -7002,6 +7016,72 @@ function createV7HTMLPrompt(preprocessData, seoKeywords, highlightKeywords, temp
     system: system,
     user: user
   };
+}
+
+/**
+ * Apps Script 에디터 직접 실행용: Drive 없이 두 프롬프트의 건달 스타일 병합을 검증합니다.
+ */
+function testGundalStylePromptIntegration() {
+  var requiredRules = [
+    '도입부 후킹',
+    '조직형 신뢰 블록',
+    '자문자답 리듬',
+    '기능 기호 사용',
+    '문단 길이 강제',
+    '[[TRUST_BADGE]]',
+    '개인 대표 화법',
+    '최대 2문장'
+  ];
+  var preprocessData = {
+    content_outline: [],
+    reference_snippets: [],
+    fulltext: 'OSB와 합판 비교 테스트 자료',
+    file_type: 'html'
+  };
+  var templateData = {
+    name: '비교분석형',
+    writing_style: '조직형 현장 화법',
+    content_structure: '도입-비교-결론',
+    key_focus_areas: '규격,두께,등급',
+    photo_guide_type: '비교',
+    tone_description: '신뢰감 있는 조직 화자',
+    cta_style: '견적 문의',
+    seo_strategy: '비교 키워드'
+  };
+  var legacyPrompt = createReconstructedPromptWithTemplate(
+    preprocessData,
+    { benchContentsWeight: 0.3, myContentsWeight: 0.7 },
+    ['OSB', '합판'],
+    ['두께', '등급'],
+    templateData,
+    {}
+  );
+  var v7Prompt = createV7HTMLPrompt(
+    preprocessData,
+    ['OSB', '합판'],
+    ['두께', '등급'],
+    templateData,
+    null,
+    null
+  );
+  var result = {
+    legacy: {},
+    v7: {},
+    noDriveLoaderReference: typeof loadWritingStyleGundal_ === 'undefined'
+  };
+
+  for (var i = 0; i < requiredRules.length; i++) {
+    var rule = requiredRules[i];
+    result.legacy[rule] = legacyPrompt.system.indexOf(rule) !== -1;
+    result.v7[rule] = v7Prompt.system.indexOf(rule) !== -1;
+  }
+
+  var serialized = JSON.stringify(result);
+  if (serialized.indexOf('false') !== -1) {
+    throw new Error('건달 스타일 프롬프트 통합 검증 실패: ' + serialized);
+  }
+  Logger.log('✅ 건달 스타일 프롬프트 통합 검증 성공: ' + serialized);
+  return result;
 }
 
 /**
@@ -9132,33 +9212,6 @@ function loadMaterialCautions_() {
     return '';
   }
 }
-
-function loadWritingStyleGundal_() {
-  var cache = CacheService.getScriptCache();
-  var cached = cache.get('blogger_writing_style_gundal');
-  if (cached) return cached;
-
-  try {
-    var folderId = '1YhX-ubbEe6sFKPvh-in8dBm_y2SOrfTj';
-    var folder = DriveApp.getFolderById(folderId);
-    var iter = folder.getFilesByName('writing-style-gundal.md');
-    if (!iter.hasNext()) {
-      Logger.log('⚠️ writing-style-gundal.md 파일 없음 — 건달 스타일 규칙 없이 진행');
-      return '';
-    }
-    var text = iter.next().getBlob().getDataAsString('UTF-8');
-    var marker = '## PROMPT_TEXT\n';
-    var idx = text.indexOf(marker);
-    var result = idx !== -1 ? text.slice(idx + marker.length).trim() : '';
-    cache.put('blogger_writing_style_gundal', result, 21600);
-    Logger.log('✅ writing-style-gundal.md 로드 완료');
-    return result;
-  } catch (e) {
-    Logger.log('⚠️ writing-style-gundal.md 로드 실패 — 건달 스타일 규칙 없이 진행: ' + e.message);
-    return '';
-  }
-}
-
 
 /**
  * =======================================================================
