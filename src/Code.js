@@ -1479,6 +1479,7 @@ function createReconstructedPromptWithTemplate(preprocessData, weights, seoKeywo
 
   // 템플릿 데이터 적용
   var templateInfo = templateData || {};
+  var gundalStyleRules = loadWritingStyleGundal_();
 
   // 스타일 데이터를 바탕으로 스타일 설명 생성
   var styleDescription = generateStyleDescription(styleData);
@@ -1508,6 +1509,7 @@ function createReconstructedPromptWithTemplate(preprocessData, weights, seoKeywo
     '- 강조 영역: ' + (templateInfo.key_focus_areas || '품질,기능') + '\n' +
     '- 어조: ' + (templateInfo.tone_description || '전문가 톤') + '\n\n' +
     '스타일 가이드라인:\n' + styleDescription + '\n' +
+    (gundalStyleRules ? '[건달 스타일 규칙]\n' + gundalStyleRules + '\n\n' : '') +
     '사진 삽입 원칙:\n' +
     '- 템플릿 특화 사진: ' + (templateInfo.photo_guide_type || '일반 사진') + '\n' +
     '- [사진 X: 한글 설명] 형태로 정확히 표기\n' +
@@ -1531,8 +1533,8 @@ function createReconstructedPromptWithTemplate(preprocessData, weights, seoKeywo
     '- 첫 문단 안에 핵심 SEO 키워드 1개 이상을 자연스럽게 포함하라\n' +
     '- 첫 문단 안에 글의 주제, 핵심 이점, 적용 대상이 드러나야 한다\n' +
     '- 첫 문단은 문장형 요약으로 작성하고, 질문만 던지고 끝내지 마라\n' +
-    '- 첫 문단에 인용문, 대사, CTA, 과도한 감탄 표현을 넣지 마라\n' +
-    '- 첫 문단 다음 문단부터 사례, 인용문, 감정 표현을 확장하라\n\n' +
+    '- 고객 질문 인용은 글 시작 5줄 이내에 배치하고 질문 직후 핵심 답을 이어라\n' +
+    '- 과도한 감탄 표현과 도입부 CTA는 넣지 마라\n\n' +
     'FAQ 생성 원칙 (매우 중요):\n' +
     '- 글 마지막 부분에 FAQ 2~3개를 반드시 생성하라\n' +
     '- FAQ는 본문 핵심 내용만 기반으로 만들어라\n' +
@@ -1546,7 +1548,8 @@ function createReconstructedPromptWithTemplate(preprocessData, weights, seoKeywo
     '인간적 문체 원칙:\n' +
     '- 짧은 문장(10자 이하)과 긴 문장(40자 이상) 혼합\n' +
     '- 독자에게 직접 말하는 2인칭 사용 "여러분", "~하셨나요?"\n' +
-    '- 전문가 경험담 1인칭 삽입 "제가 현장에서 보면..."\n' +
+    '- 개인 전문가 경험담 대신 조직 화법 사용 "대산에서 현장을 보면..."\n' +
+    '- "저는 OO년차 대표", "제가 현장에서" 같은 개인 대표 화법 금지\n' +
     '- 반전 표현 사용 "그런데 말입니다", "사실은..."\n' +
     '- 구어체 자연 삽입 "솔직히", "딱 잘라 말하면"\n\n' +
     '**제목 생성 원칙 (매우 중요):**\n' +
@@ -6891,6 +6894,8 @@ function addNaverStyleHighlight(body, text) {
 function createV7HTMLPrompt(preprocessData, seoKeywords, highlightKeywords, templateData, styleData, geminiContext) {
   var fulltext = preprocessData.fulltext || "";
   var contentOutline = preprocessData.content_outline || [];
+  var materialCautions = loadMaterialCautions_();
+  var gundalStyleRules = loadWritingStyleGundal_();
 
   // 1. 시트2 스타일 지침 생성
   var styleInstructions = '';
@@ -6949,7 +6954,8 @@ function createV7HTMLPrompt(preprocessData, seoKeywords, highlightKeywords, temp
     '- "시사하는 바가 크다" 등 AI 관용구 금지\n' +
     '- 연결어미 뒤 쉼표 금지 (-고, -며, -지만 뒤 쉼표 삭제)\n' +
     '- 문장 길이 균일화 금지 (단문/장문 자연스럽게 혼용)\n\n' +
-    (loadMaterialCautions_() ? '[자재별 시공 주의사항]\n' + loadMaterialCautions_() + '\n\n' : '') +
+    (gundalStyleRules ? '[건달 스타일 규칙]\n' + gundalStyleRules + '\n\n' : '') +
+    (materialCautions ? '[자재별 시공 주의사항]\n' + materialCautions + '\n\n' : '') +
     styleInstructions + '\n' +
     templateInstructions + '\n' +
     '[출력 형식 - 고정 표준 템플릿]\n' +
@@ -8781,6 +8787,15 @@ function insertTrustBadge_(htmlContent, contentType) {
   var html = String(htmlContent || '');
   if (!html) return html;
 
+  var trustBadgeMarker = '[[TRUST_BADGE]]';
+  var escapedTrustBadgeMarker = '<p style="line-height:1.8; margin-bottom:1.2em; color:#222;">[[TRUST_BADGE]]</p>';
+  if (html.indexOf('data-trust-badge="intro"') === -1 && html.indexOf(escapedTrustBadgeMarker) !== -1) {
+    html = html.replace(escapedTrustBadgeMarker, buildTrustBadgeHtml_('intro'));
+  }
+  if (html.indexOf('data-trust-badge="intro"') === -1 && html.indexOf(trustBadgeMarker) !== -1) {
+    html = html.replace(trustBadgeMarker, buildTrustBadgeHtml_('intro'));
+  }
+
   if (html.indexOf('data-trust-badge="intro"') === -1) {
     var firstH2Match = html.match(/<h2\b/i);
     var introInsertIndex = firstH2Match ? firstH2Match.index : -1;
@@ -9114,6 +9129,32 @@ function loadMaterialCautions_() {
     return result;
   } catch (e) {
     Logger.log('⚠️ material-cautions.md 로드 실패: ' + e.message);
+    return '';
+  }
+}
+
+function loadWritingStyleGundal_() {
+  var cache = CacheService.getScriptCache();
+  var cached = cache.get('blogger_writing_style_gundal');
+  if (cached) return cached;
+
+  try {
+    var folderId = '1YhX-ubbEe6sFKPvh-in8dBm_y2SOrfTj';
+    var folder = DriveApp.getFolderById(folderId);
+    var iter = folder.getFilesByName('writing-style-gundal.md');
+    if (!iter.hasNext()) {
+      Logger.log('⚠️ writing-style-gundal.md 파일 없음 — 건달 스타일 규칙 없이 진행');
+      return '';
+    }
+    var text = iter.next().getBlob().getDataAsString('UTF-8');
+    var marker = '## PROMPT_TEXT\n';
+    var idx = text.indexOf(marker);
+    var result = idx !== -1 ? text.slice(idx + marker.length).trim() : '';
+    cache.put('blogger_writing_style_gundal', result, 21600);
+    Logger.log('✅ writing-style-gundal.md 로드 완료');
+    return result;
+  } catch (e) {
+    Logger.log('⚠️ writing-style-gundal.md 로드 실패 — 건달 스타일 규칙 없이 진행: ' + e.message);
     return '';
   }
 }
