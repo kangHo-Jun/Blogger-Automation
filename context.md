@@ -164,6 +164,34 @@ GitHub 업로드 적용 사항:
 - 파일명 중복 시 기존 블로그 이미지 덮어쓰기 발생 가능 — 반드시 고유 파일명 사용
 - 기존 이미지 복구 경로: `https://github.com/kangHo-Jun/Blog/commits/main/images/`
 
+## 2026-06-23 작업 내역
+
+### Blogger-Automation (main 브랜치)
+
+#### 1. 폴더 스캔 제거 (커밋: 871fa59)
+- `processNextSEOFile()`: savedFinalFile 반환 추가
+- `runFullPipelineOneByOne()`: 반환값 전달
+- `runGenerateOnly()`: getLatestGeneratedSeoFile_() 스캔 제거 → runFullPipelineOneByOne() 직접 반환값 사용
+
+#### 2. 브랜드 자연 노출 원칙 (커밋: 5de7489)
+- 시스템 프롬프트에 [브랜드 노출 원칙] 섹션 추가
+- 대산 유통사 포지셔닝 명시
+- 글 1편당 1~2회 자연 노출 규칙
+
+#### 3. 자재별 실패 사례 동적 주입 (커밋: be575a7)
+- Drive 폴더 1YhX-ubbEe6sFKPvh-in8dBm_y2SOrfTj 에 material-cautions.md 생성
+- loadMaterialCautions_() 함수 추가 (6hr 캐시)
+- 시스템 프롬프트에 동적 주입
+
+#### 4. FAQ 섹션 자동 삽입 (커밋: 9289321)
+- 고정 표준 템플릿에 FAQ 섹션 추가 (9번)
+- details/summary HTML 형식
+- 실제 검색 질문 형태 작성 규칙
+
+#### 5. 지식 출처 표시 규칙
+- 수치/사실 뒤 출처 근거 괄호 명시 규칙 추가
+- 출처 불명확 시 "업계 일반 기준" 표기 방법 명시
+
 # 실행 메모
 
 - `runGenerateOnly()`

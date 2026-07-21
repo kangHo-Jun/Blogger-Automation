@@ -9256,3 +9256,28 @@ function testPublishToBlogger() {
   var url = publishToBlogger(testTitle, testHtml, testLabels);
   Logger.log("발행 URL: " + url);
 }
+
+function createNaverMaterialCautionsFile() {
+  var folderId = '1YhX-ubbEe6sFKPvh-in8dBm_y2SOrfTj';
+  var folder = DriveApp.getFolderById(folderId);
+  var content = '# 자재별 시공 주의사항 (네이버 블로그용)\n\n' +
+    '## 석고보드\n' +
+    '- 습기에 약하므로 욕실/주방 인접부는 방수 처리 필수\n' +
+    '- 절단 시 분진 발생 — 마스크 착용 권장\n\n' +
+    '## 단열재\n' +
+    '- 시공 후 외부 노출 금지 (자외선 열화)\n' +
+    '- 화기 근처 사용 시 불연 등급 확인 필수\n\n' +
+    '## 목자재\n' +
+    '- 함수율 15% 이하 제품 사용 권장\n' +
+    '- 직사광선/습기 교차 환경 장기 노출 시 뒤틀림 발생 가능\n\n' +
+    '## 타일/석재\n' +
+    '- 동절기 시공 시 줄눈 동결 주의\n' +
+    '- 대형 판재(600mm 이상)는 진동 공구 사용 금지\n';
+
+  var existing = folder.getFilesByName('material-cautions_naver.md');
+  if (existing.hasNext()) {
+    existing.next().setTrashed(true);
+  }
+  folder.createFile('material-cautions_naver.md', content, MimeType.PLAIN_TEXT);
+  Logger.log('✅ material-cautions_naver.md 생성 완료');
+}
