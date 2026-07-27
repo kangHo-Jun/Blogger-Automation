@@ -330,9 +330,15 @@ function getRelatedBloggerPostsByCategory_(category, currentTitle, maxResults) {
 
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
+      var itemStatus = String(item.status || '').trim().toUpperCase();
       var itemTitle = String(item.title || '').trim();
       var itemUrl = String(item.url || '').trim();
 
+      if (itemStatus !== 'LIVE') {
+        Logger.log('⏭️ 관련 글 제외: LIVE 상태 아님 / title=' +
+          itemTitle + ' / status=' + (itemStatus || '없음'));
+        continue;
+      }
       if (!itemTitle || !itemUrl) continue;
       if (itemTitle === normalizedTitle) continue;
 
@@ -388,9 +394,15 @@ function getRecentLivePosts_(currentTitle, limit) {
 
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
+      var itemStatus = String(item.status || '').trim().toUpperCase();
       var itemTitle = String(item.title || '').trim();
       var itemUrl = String(item.url || '').trim();
 
+      if (itemStatus !== 'LIVE') {
+        Logger.log('⏭️ 최근 글 제외: LIVE 상태 아님 / title=' +
+          itemTitle + ' / status=' + (itemStatus || '없음'));
+        continue;
+      }
       if (!itemTitle || !itemUrl) continue;
       if (itemTitle === normalizedTitle) continue;
 
@@ -1485,8 +1497,9 @@ function createReconstructedPromptWithTemplate(preprocessData, weights, seoKeywo
   var templateInfo = templateData || {};
   var gundalStyleRules =
     '1. 도입부 후킹: 글 시작 5줄 이내에 실제 고객 질문 1~2개를 큰따옴표로 인용한다. 정의나 사전식 설명으로 시작하지 마라.\n' +
-    '- 도입 순서는 반드시 `인사말 → 고객 질문 인용 → [[TRUST_BADGE]] → 조직형 신뢰 블록 → 본문`으로 구성한다. `[[TRUST_BADGE]]`는 단독 줄에 정확히 한 번만 출력한다.\n' +
-    '2. 조직형 신뢰 블록: 뱃지 바로 다음에 대산의 유통 경력·취급 품목 범위·안양 지역 납품 실적을 1~2문장으로 배치한다. 반드시 "대산은/저희는/대산에서" 같은 조직 주어를 사용한다.\n' +
+    '- 도입 순서는 반드시 `인사말 → 고객 질문 인용 → 조직형 신뢰 블록 → 본문`으로 구성한다.\n' +
+    '- `[[TRUST_BADGE]]`는 도입부에 넣지 말고 견적 CTA 바로 앞 단독 줄에 정확히 한 번만 출력한다.\n' +
+    '2. 조직형 신뢰 블록: 고객 질문 다음에 대산의 유통 경력·취급 품목 범위·안양 지역 납품 실적을 1~2문장으로 배치한다. 반드시 "대산은/저희는/대산에서" 같은 조직 주어를 사용한다.\n' +
     '- 대산은 건축자재 유통사이며 제조사나 개인 전문가로 서술하지 마라. "저는 OO년차 대표", "제가 현장에서", "대표인 저는" 등 개인 대표 화법을 금지한다. 제공 자료에 없는 수치를 만들지 마라.\n' +
     '3. 자문자답 리듬: 본문 소제목 진입 전에 `그렇다면 ~일까요?` 형태의 자문을 1회 이상 넣고 다음 문장에서 즉시 답한다.\n' +
     '4. 기능 기호 사용: 규격·두께·등급 나열은 `▶`, `→` 기호로 목록화하고 일반 문단형 설명과 혼용한다.\n' +
@@ -1714,6 +1727,9 @@ function createReconstructedPromptWithTemplate(preprocessData, weights, seoKeywo
     '- 고객 질문을 따옴표로 인용할 때도 예외 없이 \\"를 사용하라\n' +
     '- 최종 응답은 JSON.parse가 즉시 성공하는 유효한 JSON 객체여야 한다\n\n' +
     '행동 유도:\n' +
+    '- CTA 바로 앞 단독 줄에 [[TRUST_BADGE]]를 정확히 한 번 배치하라\n' +
+    '- CTA는 `지금 바로 견적 받아보세요` 제목과 `견적 받기 →` 버튼만 사용하라\n' +
+    '- 비용 질문, 실시간 견적 시스템 설명, 30초 안내 문장은 출력하지 마라\n' +
     '- CTA 스타일: ' + (templateInfo.cta_style || '문의 유도') + '\n' +
     '- SEO 전략: ' + (templateInfo.seo_strategy || '키워드 중심');
 
@@ -7028,8 +7044,9 @@ function createV7HTMLPrompt(preprocessData, seoKeywords, highlightKeywords, temp
   var materialCautions = loadMaterialCautions_();
   var gundalStyleRules =
     '1. 도입부 후킹: 글 시작 5줄 이내에 실제 고객 질문 1~2개를 큰따옴표로 인용한다. 정의나 사전식 설명으로 시작하지 마라.\n' +
-    '- 도입 순서는 반드시 `인사말 → 고객 질문 인용 → [[TRUST_BADGE]] → 조직형 신뢰 블록 → 본문`으로 구성한다. `[[TRUST_BADGE]]`는 단독 줄에 정확히 한 번만 출력한다.\n' +
-    '2. 조직형 신뢰 블록: 뱃지 바로 다음에 대산의 유통 경력·취급 품목 범위·안양 지역 납품 실적을 1~2문장으로 배치한다. 반드시 "대산은/저희는/대산에서" 같은 조직 주어를 사용한다.\n' +
+    '- 도입 순서는 반드시 `인사말 → 고객 질문 인용 → 조직형 신뢰 블록 → 본문`으로 구성한다.\n' +
+    '- `[[TRUST_BADGE]]`는 도입부에 넣지 말고 견적 CTA 바로 앞 단독 줄에 정확히 한 번만 출력한다.\n' +
+    '2. 조직형 신뢰 블록: 고객 질문 다음에 대산의 유통 경력·취급 품목 범위·안양 지역 납품 실적을 1~2문장으로 배치한다. 반드시 "대산은/저희는/대산에서" 같은 조직 주어를 사용한다.\n' +
     '- 대산은 건축자재 유통사이며 제조사나 개인 전문가로 서술하지 마라. "저는 OO년차 대표", "제가 현장에서", "대표인 저는" 등 개인 대표 화법을 금지한다. 제공 자료에 없는 수치를 만들지 마라.\n' +
     '3. 자문자답 리듬: 본문 소제목 진입 전에 `그렇다면 ~일까요?` 형태의 자문을 1회 이상 넣고 다음 문장에서 즉시 답한다.\n' +
     '4. 기능 기호 사용: 규격·두께·등급 나열은 `▶`, `→` 기호로 목록화하고 일반 문단형 설명과 혼용한다.\n' +
@@ -7110,7 +7127,9 @@ function createV7HTMLPrompt(preprocessData, seoKeywords, highlightKeywords, temp
     '7. TIP박스: <tr><td style="padding:20px 0;"><table style="width:100%;background-color:#f0f0f0;border-collapse:collapse;"><tr><td style="padding:18px 20px;">💡 <b>TIP</b><br>내용</td></tr></table></td></tr>\n' +
     '8. 비교테이블: 별도 <table> 중첩 (헤더:#222배경 흰글씨, 짝수행:#f9f9f9배경)\n' +
     '9. FAQ: <details><summary>질문</summary><p>답변</p></details> 형식으로 2~3개\n' +
-    '10. 마무리: <tr><td style="padding:30px 0;text-align:center;"><b>마무리 질문</b><br>핵심메시지<br>CTA</td></tr>\n\n' +
+    '10. 마무리: <tr><td style="padding:30px 0;text-align:center;"><b>마무리 질문</b><br>핵심메시지</td></tr>\n' +
+    '11. CTA: [[TRUST_BADGE]] 단독 줄 다음에 `지금 바로 견적 받아보세요` 제목과 `견적 받기 →` 버튼만 배치\n' +
+    '- 비용 질문, 실시간 견적 시스템 설명, 30초 안내 문장은 출력하지 말 것\n\n' +
     '</table>\n\n' +
     '[작성 원칙]\n' +
     '- 섹션별 사진 2개씩 배열\n' +
@@ -8978,56 +8997,33 @@ function convertMarkdownTableToHtml_(text) {
 }
 
 function buildTrustBadgeHtml_(placement) {
-  return '<img data-trust-badge="' + String(placement || 'intro') + '" src="' + TRUST_BADGE_URL +
+  return '<img data-trust-badge="' + String(placement || 'cta') + '" src="' + TRUST_BADGE_URL +
     '" alt="' + TRUST_BADGE_ALT +
     '" style="width:100%; max-width:680px; height:auto; display:block; margin:1.5rem auto;">\n';
 }
 
-function shouldInsertTrustBadgeBeforeCta_(contentType) {
-  var primaryType = String(((contentType || {}).primary) || contentType || '').trim();
-  return {
-    '대산브랜딩': true,
-    '구매가이드': true,
-    '비용물류판단': true
-  }[primaryType] === true;
-}
-
 /**
- * 모든 포스트의 도입부 직후에 신뢰 뱃지를 삽입합니다.
- * 선택 콘텐츠 타입은 하단 견적 CTA 직전에 동일 뱃지를 한 번 더 삽입합니다.
+ * 기존 TRUST_BADGE 마커와 뱃지를 제거한 뒤,
+ * 모든 포스트의 견적 CTA 직전에 신뢰 뱃지를 정확히 한 번 삽입합니다.
  */
 function insertTrustBadge_(htmlContent, contentType) {
   var html = String(htmlContent || '');
   if (!html) return html;
 
-  var trustBadgeMarker = '[[TRUST_BADGE]]';
-  var escapedTrustBadgeMarker = '<p style="line-height:1.8; margin-bottom:1.2em; color:#222;">[[TRUST_BADGE]]</p>';
-  if (html.indexOf('data-trust-badge="intro"') === -1 && html.indexOf(escapedTrustBadgeMarker) !== -1) {
-    html = html.replace(escapedTrustBadgeMarker, buildTrustBadgeHtml_('intro'));
-  }
-  if (html.indexOf('data-trust-badge="intro"') === -1 && html.indexOf(trustBadgeMarker) !== -1) {
-    html = html.replace(trustBadgeMarker, buildTrustBadgeHtml_('intro'));
+  html = html.replace(/<img\b[^>]*data-trust-badge="(?:intro|cta)"[^>]*>\s*/gi, '');
+  html = html.replace(/<p\b[^>]*>\s*\[\[TRUST_BADGE\]\]\s*<\/p>\s*/gi, '');
+  html = html.replace(/\[\[TRUST_BADGE\]\]/g, '');
+
+  var ctaMarker = '<div data-daesan-cta="estimate"';
+  var ctaInsertIndex = html.lastIndexOf(ctaMarker);
+  if (ctaInsertIndex === -1) {
+    Logger.log('⚠️ TRUST_BADGE 삽입 생략: 견적 CTA 마커 없음');
+    return html;
   }
 
-  if (html.indexOf('data-trust-badge="intro"') === -1) {
-    var firstH2Match = html.match(/<h2\b/i);
-    var introInsertIndex = firstH2Match ? firstH2Match.index : -1;
-    if (introInsertIndex === -1) {
-      var h1EndIndex = html.search(/<\/h1>/i);
-      introInsertIndex = h1EndIndex === -1 ? 0 : html.indexOf('>', h1EndIndex) + 1;
-    }
-    html = html.substring(0, introInsertIndex) + '\n' + buildTrustBadgeHtml_('intro') + html.substring(introInsertIndex);
-  }
-
-  if (shouldInsertTrustBadgeBeforeCta_(contentType) && html.indexOf('data-trust-badge="cta"') === -1) {
-    var ctaMarker = '<div data-daesan-cta="estimate"';
-    var ctaInsertIndex = html.lastIndexOf(ctaMarker);
-    if (ctaInsertIndex !== -1) {
-      html = html.substring(0, ctaInsertIndex) + buildTrustBadgeHtml_('cta') + html.substring(ctaInsertIndex);
-    }
-  }
-
-  return html;
+  return html.substring(0, ctaInsertIndex) +
+    buildTrustBadgeHtml_('cta') +
+    html.substring(ctaInsertIndex);
 }
 
 function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts, contentType) {
@@ -9080,11 +9076,9 @@ function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts, cont
       "</div>\n";
   };
 
-  var buildCtaHtml = function (materialName) {
-    var safeMaterialName = escapeHtml(materialName || '건축자재');
-    return "<div data-daesan-cta=\"estimate\" style=\"background:#1a3a5c; color:white; padding:2em; margin:2em 0; border-radius:8px; text-align:center;\">\n" +
-      "  <p style=\"font-size:1.2em; font-weight:500; margin:0 0 0.5em; color:white;\">지금 바로 견적 받아보세요</p>\n" +
-      "  <p style=\"font-size:0.9em; margin:0 0 1.2em; color:rgba(255,255,255,0.85); line-height:1.7;\">" + safeMaterialName + " 비용이 궁금하신가요?<br>대산 실시간 견적 시스템으로 30초 안에 확인하세요</p>\n" +
+  var buildCtaHtml = function () {
+    return "<div data-daesan-cta=\"estimate\" style=\"background:#1a3a5c; color:white; padding:1.5em; margin:2em 0; border-radius:8px; text-align:center;\">\n" +
+      "  <p style=\"font-size:1.2em; font-weight:500; margin:0 0 0.9em; color:white;\">지금 바로 견적 받아보세요</p>\n" +
       "  <a href=\"https://daesan.ai\" style=\"display:inline-block; background:white; color:#1a3a5c; padding:0.7em 2em; border-radius:8px; font-weight:500; font-size:0.9em; text-decoration:none;\">견적 받기 →</a>\n" +
       "</div>\n";
   };
@@ -9151,7 +9145,6 @@ function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts, cont
   var ctaInsertIndex = totalH2 > 0 ? Math.ceil(totalH2 / 2) : 0;
   var insertedCta = false;
   var renderedH2 = 0;
-  var ctaKeyword = seoKeywords && seoKeywords.length > 0 ? seoKeywords[0] : '건축자재';
   var faqItems = [];
 
   for (var i = 0; i < lines.length; i++) {
@@ -9188,7 +9181,7 @@ function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts, cont
     // 소제목 (##) -> H2 (내용물만 이스케이프)
     if (line.indexOf('## ') === 0) {
       if (!insertedCta && ctaInsertIndex > 0 && renderedH2 === ctaInsertIndex) {
-        html += buildCtaHtml(ctaKeyword);
+        html += buildCtaHtml();
         tagCount.div++;
         insertedCta = true;
       }
@@ -9285,7 +9278,7 @@ function convertToBloggerHTML(docContent, title, seoKeywords, relatedPosts, cont
   }
 
   if (!insertedCta && totalH2 === 0) {
-    html += buildCtaHtml(ctaKeyword);
+    html += buildCtaHtml();
     tagCount.div++;
   }
 
