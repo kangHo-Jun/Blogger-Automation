@@ -21,3 +21,8 @@
 2. `runGenerateOnly()`로 글 본문 및 이미지 프롬프트, SVG 테이블 자동 생성
 3. `generateOpenAIImage()`로 OpenAI DALL-E 3 활용 이미지 생성 후 GitHub 자동 업로드
 4. `runPublishOnly()`로 최종 Blogger 발행
+
+## 관련 사이트
+- [대산 건축자재 공식 사이트](https://daesan.ai)
+- [대산블로그] (https://blog.naver.com/daesan3833)
+- [건축자재 인사이드 블로그](https://daesan-inside.blogspot.com/)
